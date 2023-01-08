@@ -65,7 +65,7 @@ virt-customize -a $image --run-command '>/etc/machine-id'
 qm create $VMID --memory 1024 --core 1 --name $distro-template-ga --net0 virtio,bridge=vmbr0
 qemu-img resize $image 10G
 qm importdisk $VMID $image local-lvm
-qm set $VMID --scsihw virtio-scsi-pci --scsi0 local-lvm:vm-$VMID-disk-0
+qm set $VMID --scsihw virtio-scsi-pci --scsi0 local-lvm:vm-$VMID-disk-0,discard=on,ssd=1
 qm set $VMID --ide2 local-lvm:cloudinit
 qm set $VMID --boot c --bootdisk scsi0
 qm set $VMID --serial0 socket --vga serial0
