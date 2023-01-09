@@ -17,6 +17,7 @@ distro=(
     rocky8
     rocky9
     fedora37
+    opensuse154
 )
 url=(
     https://cloud.debian.org/images/cloud/buster/latest/debian-10-generic-amd64.qcow2
@@ -26,6 +27,7 @@ url=(
     https://dl.rockylinux.org/pub/rocky/8/images/x86_64/Rocky-8-GenericCloud-Base.latest.x86_64.qcow2
     https://dl.rockylinux.org/pub/rocky/9/images/x86_64/Rocky-9-GenericCloud-Base.latest.x86_64.qcow2
     https://download.fedoraproject.org/pub/fedora/linux/releases/37/Cloud/x86_64/images/Fedora-Cloud-Base-37-1.7.x86_64.qcow2
+    https://download.opensuse.org/repositories/Cloud:/Images:/Leap_15.4/images/openSUSE-Leap-15.4.x86_64-1.0.1-NoCloud-Build2.188.qcow2
 )
 
 while getopts hv:s: flag

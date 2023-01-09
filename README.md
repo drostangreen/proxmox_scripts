@@ -15,8 +15,9 @@ Templates tested with most major distros
 - Debian
 - Fedora
 - Rocky (likely also RHEL and AlmaLinux but currently untested)
+- OpenSuse
 
-Planning on adding Arch and OpenSUSE as well
+Planning on adding Arch as well
 
 ## BSD's are not currently supported
 - FreeBSD (should be a simple mod)
