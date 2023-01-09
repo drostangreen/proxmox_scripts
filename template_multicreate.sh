@@ -3,6 +3,7 @@
 Help(){
     echo Use this script with the following flags
     echo "-v    select the starting VMID *REQUIRED"
+    echo "-s    select storage target (use shared storage if available) *REQUIRED"
 }
 
 # Place the name of the distros you would like to see created
@@ -27,7 +28,7 @@ url=(
     https://download.fedoraproject.org/pub/fedora/linux/releases/37/Cloud/x86_64/images/Fedora-Cloud-Base-37-1.7.x86_64.qcow2
 )
 
-while getopts hv: flag
+while getopts hv:s: flag
 do
     case $flag in
         h)
@@ -36,7 +37,11 @@ do
         ;;
 
         v)
-        VMID=$OPTARG
+        VMID=$OPTARG-1
+        ;;
+
+        s)
+        storage=$OPTARG
         ;;
 
         \?)
@@ -47,10 +52,10 @@ do
     esac
 done
 
-rm *.qcow2 *.img
+echo "Removing any old qcow2 or img files"; rm -f *.qcow2 *.img > /dev/null
 
 template_create () {
-    sshkeys=~/.ssh/id_rsa.pub
+    sshkeys=~/tadmin_pub_key
     
     echo "Downloading $image now"; wget -qO $image $url
 
@@ -60,11 +65,16 @@ template_create () {
     echo "Removing /etc/machine-id"; virt-customize -a $image --run-command '>/etc/machine-id' > /dev/null
 
     # create VM, resize the disk, import disk and create Cloud Init drive. Then set default settings for vm
-    echo "Creating $VMID with name $distro-template-ga"; qm create $VMID --memory 1024 --core 1 --name $distro-template-ga --net0 virtio,bridge=vmbr0 > /dev/null
+    echo "Creating $VMID with name ${distro[$index]}-template-ga"; qm create $VMID --memory 1024 --core 1 --name ${distro[$index]}-template-ga --net0 virtio,bridge=vmbr0 > /dev/null
     echo "Resizing disk"; qemu-img resize $image 10G > /dev/null
-    echo "Importing disk"; qm importdisk $VMID $image local-lvm > /dev/null
-    echo "Setting Virtual Drive to scsi0"; qm set $VMID --scsihw virtio-scsi-pci --scsi0 local-lvm:vm-$VMID-disk-0,discard=on,ssd=1 > /dev/null
-    echo "Add Cloud Init drive"; qm set $VMID --ide2 local-lvm:cloudinit > /dev/null
+    echo "Importing disk"; qm importdisk $VMID $image $storage > /dev/null
+    qm set $VMID --scsihw virtio-scsi-pci --scsi0 $storage:vm-$VMID-disk-0,discard=on,ssd=1 > /dev/null
+    if [ $? == 0 ]; then
+        echo "Setting Virtual Drive to scsi0"
+    else
+        echo "Setting Virtual Drive to scsi0 on shared storage"; qm set $VMID --scsihw virtio-scsi-pci --scsi0 $storage:$VMID/vm-$VMID-disk-0.raw,discard=on,ssd=1,format=qcow2 > /dev/null
+    fi
+    echo "Add Cloud Init drive"; qm set $VMID --ide2 $storage:cloudinit > /dev/null
     echo "Set bootdisk to scsi0"; qm set $VMID --boot c --bootdisk scsi0 > /dev/null
     echo "Set serial connecton"; qm set $VMID --serial0 socket --vga serial0 > /dev/null
     echo "Enabling qemu-guest-agent in Proxmox"; qm set $VMID --agent 1 > /dev/null
