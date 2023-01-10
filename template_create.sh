@@ -6,10 +6,11 @@ Help(){
     echo "-d    set the distro name *REQUIRED"
     echo "-u    set the url of the image to download *REQUIRED"
     echo "-p    set the password for the created user with Cloud Init"
-    echo "-s    set the ssh key file to be used"
+    echo "-s    set the target storage to be used"
+    echo "-k    set the key file used for ssh keys *REQUIRED"
 }
 
-while getopts hv:d:u:p:s: flag
+while getopts hv:d:u:p:s:k: flag
 do
     case $flag in
         h)
@@ -34,6 +35,10 @@ do
         ;;
 
         s)
+        storage=$OPTARG
+        ;;
+
+        k)
         sshkeys=$OPTARG
         ;;
 
@@ -64,8 +69,13 @@ virt-customize -a $image --run-command '>/etc/machine-id'
 # create VM, resize the disk, import disk and create Cloud Init drive. Then set default settings for vm
 qm create $VMID --memory 1024 --core 1 --name $distro-template-ga --net0 virtio,bridge=vmbr0
 qemu-img resize $image 10G
-qm importdisk $VMID $image local-lvm
+qm importdisk $VMID $image $storage --format qcow2
 qm set $VMID --scsihw virtio-scsi-pci --scsi0 local-lvm:vm-$VMID-disk-0,discard=on,ssd=1
+if [ $? == 0 ]; then
+    echo "Setting Virtual Drive to scsi0"
+else
+    echo "Setting Virtual Drive to scsi0 on shared storage"; qm set $VMID --scsihw virtio-scsi-pci --scsi0 $storage:$VMID/vm-$VMID-disk-0.qcow2,discard=on,ssd=1,format=qcow2 > /dev/null
+fi
 qm set $VMID --ide2 local-lvm:cloudinit
 qm set $VMID --boot c --bootdisk scsi0
 qm set $VMID --serial0 socket --vga serial0
