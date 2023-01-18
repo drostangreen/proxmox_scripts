@@ -76,7 +76,7 @@ if [ $? == 0 ]; then
 else
     echo "Setting Virtual Drive to scsi0 on shared storage"; qm set $VMID --scsihw virtio-scsi-pci --scsi0 $storage:$VMID/vm-$VMID-disk-0.qcow2,discard=on,ssd=1,format=qcow2 > /dev/null
 fi
-echo "Add Cloud Init drive"; qm set $VMID --ide2 local-lvm:cloudinit > /dev/null
+echo "Add Cloud Init drive"; qm set $VMID --ide2 $storage:cloudinit > /dev/null
 echo "Set bootdisk to scsi0"; qm set $VMID --boot c --bootdisk scsi0 > /dev/null
 echo "Set serial connecton"; qm set $VMID --serial0 socket --vga serial0 > /dev/null
 echo "Enabling qemu-guest-agent in Proxmox"; qm set $VMID --agent 1 > /dev/null
