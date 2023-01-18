@@ -70,12 +70,12 @@ echo "Removing /etc/machine-id"; virt-customize -a $image --run-command '>/etc/m
 echo "Creating $VMID with name $distro-template-ga"; qm create $VMID --memory 1024 --core 1 --name $distro-template-ga --net0 virtio,bridge=vmbr0 > /dev/null
 echo "Resizing disk"; qemu-img resize $image 10G > /dev/null
 echo "Importing disk"; qm importdisk $VMID $image $storage --format qcow2 > /dev/null
-qm set $VMID --scsihw virtio-scsi-pci --scsi0 local-lvm:vm-$VMID-disk-0,discard=on,ssd=1 > /dev/null
-if [ $? == 0 ]; then
-    echo "Setting Virtual Drive to scsi0"
-else
+if [ -f /mnt/pve/$storage/images/$VMID/*-$VMID-disk-0.qcow2 ]; then
     echo "Setting Virtual Drive to scsi0 on shared storage"; qm set $VMID --scsihw virtio-scsi-pci --scsi0 $storage:$VMID/vm-$VMID-disk-0.qcow2,discard=on,ssd=1,format=qcow2 > /dev/null
+else
+    echo "Setting Virtual Drive to scsi0"; qm set $VMID --scsihw virtio-scsi-pci --scsi0 local-lvm:vm-$VMID-disk-0,discard=on,ssd=1 > /dev/null
 fi
+
 echo "Add Cloud Init drive"; qm set $VMID --ide2 $storage:cloudinit > /dev/null
 echo "Set bootdisk to scsi0"; qm set $VMID --boot c --bootdisk scsi0 > /dev/null
 echo "Set serial connecton"; qm set $VMID --serial0 socket --vga serial0 > /dev/null
