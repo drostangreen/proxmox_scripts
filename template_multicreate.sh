@@ -59,7 +59,7 @@ echo "Removing any old qcow2 or img files"; rm -f *.qcow2 *.img > /dev/null
 template_create () {
     sshkeys=~/tadmin_pub_key
     
-    echo "Downloading $image now"; wget -qO $image $url
+    echo "Downloading $image now"; wget -qO $image ${url[$index]}
 
     # installing qemu-guest-agent into the downloaded qcow2 image, then removing machine-id
     echo "Updating $image"; virt-customize -a $image --update > /dev/null
