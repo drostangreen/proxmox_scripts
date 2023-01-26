@@ -59,11 +59,18 @@ function pause(){
 # sshkeys=~/.ssh/id_rsa.pub
 image=$distro.qcow2
 
+echo "Checking for required package"; which virt-customize > /dev/null
+if [ $? -eq 0 ]; then
+    echo "libguestfs-tools is already installed... Continuing..."
+else
+    apt update && apt install -y libguestfs-tools > /dev/null
+fi
+
 echo "Downloading $image now"; wget -qO $image $url
 
-# installing qemu-guest-agent into the downloaded qcow2 image, then removing machine-id
-echo "Updating $image"; virt-customize -a $image --update > /dev/null
-echo "Installing qemu-guest-agent"; virt-customize -a $image --install qemu-guest-agent > /dev/null
+# installing qemu-guest-agent on first boot, then removing machine-id
+echo "Install qemu-guest-agent on first boot"; virt-customize -a $image --firstboot-install qemu-guest-agent > /dev/null
+echo "Enable qemu-guest-agent service on first boot"; virt-customize -a $image --first-boot-command "systemctl enable --now qemu-guest-agent" > /dev/null
 echo "Removing /etc/machine-id"; virt-customize -a $image --run-command '>/etc/machine-id' > /dev/null
 
 # create VM, resize the disk, import disk and create Cloud Init drive. Then set default settings for vm
