@@ -4,9 +4,10 @@ Help(){
     echo Use this script with the following flags
     echo "-v    select the starting VMID *REQUIRED"
     echo "-s    select storage target (use shared storage if available) *REQUIRED"
+    echo "-p    set a password to be used by cloudinit *OPTIONAL"
 }
 
-while getopts hv:s: flag
+while getopts hv:s:p: flag
 do
     case $flag in
         h)
@@ -20,6 +21,10 @@ do
 
         s)
         storage=$OPTARG
+        ;;
+
+        p)
+        password="--cipassword $OPTARG"
         ;;
 
         \?)
@@ -74,11 +79,8 @@ template_create () {
     echo "Set serial connecton"; qm set $VMID --serial0 socket --vga serial0 > /dev/null
     echo "Enabling qemu-guest-agent in Proxmox"; qm set $VMID --agent 1 > /dev/null
 
-    # Below is Cloud Init. Switch the Commented line if you'd like to set a password.
-    # The Proxmox team does recommend only using SSH key and now password. You will not be able to 
-    # log in from the console in this case.
-    # qm set $VMID --ciuser tadmin --cipassword $cipassword --ipconfig0 ip=dhcp --sshkeys $sshkeys
-    echo "Defining Cloud Init params"; qm set $VMID --ciuser tadmin --ipconfig0 ip=dhcp --sshkeys $sshkeys > /dev/null
+    # Cloudinit setup
+    echo "Defining Cloud Init params"; qm set $VMID --ciuser tadmin $password --ipconfig0 ip=dhcp --sshkeys $sshkeys > /dev/null
 
     echo "Converting $VMID to Template"; qm template $VMID > /dev/null
 
