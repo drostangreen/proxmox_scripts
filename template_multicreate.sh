@@ -38,6 +38,7 @@ done
 declare -A distro_array=(
     [debian10]="https://cloud.debian.org/images/cloud/buster/latest/debian-10-generic-amd64.qcow2"
     [debian11]="https://cloud.debian.org/images/cloud/bullseye/latest/debian-11-generic-amd64.qcow2"
+    [debian12]="https://cloud.debian.org/images/cloud/bookworm/latest/debian-12-generic-amd64.qcow2"
     [ubuntu2004]="https://cloud-images.ubuntu.com/minimal/releases/focal/release/ubuntu-20.04-minimal-cloudimg-amd64.img"
     [ubuntu2204]="https://cloud-images.ubuntu.com/minimal/releases/jammy/release/ubuntu-22.04-minimal-cloudimg-amd64.img"
     [centos8]="https://cloud.centos.org/centos/8-stream/x86_64/images/CentOS-Stream-GenericCloud-8-20220913.0.x86_64.qcow2"
@@ -47,6 +48,11 @@ declare -A distro_array=(
     [fedora37]="https://download.fedoraproject.org/pub/fedora/linux/releases/37/Cloud/x86_64/images/Fedora-Cloud-Base-37-1.7.x86_64.qcow2"
     [opensuse154]="https://download.opensuse.org/repositories/Cloud:/Images:/Leap_15.4/images/openSUSE-Leap-15.4.x86_64-1.0.1-NoCloud-Build2.188.qcow2"
 )
+
+Error(){
+    echo "Error at line $1"
+}
+trap 'Error $LINENO' ERR
 
 echo "Checking for required package"; which virt-customize > /dev/null
 if [ $? -eq 0 ]; then
@@ -64,7 +70,7 @@ template_create () {
 
     # installing qemu-guest-agent into the downloaded qcow2 image, then removing machine-id
     echo "Install qemu-guest-agent on first boot"; virt-customize -a $image --firstboot-install qemu-guest-agent > /dev/null
-    echo "Enable qemu-guest-agent service on first boot"; virt-customize -a $image --first-boot-command "systemctl enable --now qemu-guest-agent" > /dev/null
+    echo "Enable qemu-guest-agent service on first boot"; virt-customize -a $image --firstboot-command "systemctl enable --now qemu-guest-agent" > /dev/null
     echo "Removing /etc/machine-id"; virt-customize -a $image --run-command '>/etc/machine-id' > /dev/null
 
     # create VM, resize the disk, import disk and create Cloud Init drive. Then set default settings for vm
