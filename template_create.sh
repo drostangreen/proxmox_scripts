@@ -70,7 +70,7 @@ echo "Downloading $image now"; wget -qO $image $url
 
 # installing qemu-guest-agent on first boot, then removing machine-id
 echo "Install qemu-guest-agent on first boot"; virt-customize -a $image --firstboot-install qemu-guest-agent > /dev/null
-echo "Enable qemu-guest-agent service on first boot"; virt-customize -a $image --first-boot-command "systemctl enable --now qemu-guest-agent" > /dev/null
+echo "Enable qemu-guest-agent service on first boot"; virt-customize -a $image --firstboot-command "systemctl enable --now qemu-guest-agent" > /dev/null
 echo "Removing /etc/machine-id"; virt-customize -a $image --run-command '>/etc/machine-id' > /dev/null
 
 # create VM, resize the disk, import disk and create Cloud Init drive. Then set default settings for vm
